@@ -1,0 +1,1619 @@
+===== C:\Users\ahmad\eclipse-workspace\algorithmFirstProj\src\algorithmFirstProj\LCS.java ===== 
+package algorithmFirstProj;
+
+/*
+ * This class computes the optimal solution for the maximum number of LEDs powered by power sources
+ * using the Longest Common Subsequence (LCS) dynamic programming approach.
+ */
+
+public class LCS {
+
+	// fields
+	private int power; // number of power sources
+	private int[] powers; // array of battery powers
+	private int[] leds; // array of LED power requirements
+	private char[][] b; // directions for reconstructing LCS
+	private int[][] c; // DP table
+	private String lcs = ""; // resulting sequence as string
+	private String[] lcss; // resulting sequence split into array
+
+	public LCS(int[] powers, int[] leds) {
+		setPowers(powers);
+		setLeds(leds);
+		setPower(powers.length);
+
+		longestCommonSubArrayLength(powers, leds);
+		print(b, leds, powers.length, leds.length);
+		setLcss(lcs.trim().split(" "));
+	}
+
+	private int longestCommonSubArrayLength(int[] powers, int[] leds) {
+		int n = powers.length;
+		int m = leds.length;
+
+		c = new int[n + 1][m + 1];
+		b = new char[n + 1][m + 1];
+
+		// initialize first row and column
+		for (int i = 0; i <= n; i++)
+			c[i][0] = 0;
+		for (int j = 0; j <= m; j++)
+			c[0][j] = 0;
+
+		// fill DP table
+		for (int i = 1; i <= n; i++) {
+			for (int j = 1; j <= m; j++) {
+				if (powers[i - 1] == leds[j - 1]) {
+					c[i][j] = c[i - 1][j - 1] + 1;
+					b[i][j] = '\\'; // diagonal
+				} else if (c[i - 1][j] >= c[i][j - 1]) {
+					c[i][j] = c[i - 1][j];
+					b[i][j] = '^'; // up
+				} else {
+					c[i][j] = c[i][j - 1];
+					b[i][j] = '<'; // left
+				}
+			}
+		}
+
+		return c[n][m];
+	}
+
+	private void print(char[][] b, int[] leds, int i, int j) {
+		if (i == 0 || j == 0)
+			return;
+
+		if (b[i][j] == '\\') {
+			print(b, leds, i - 1, j - 1);
+			lcs += leds[j - 1] + " ";
+		} else if (b[i][j] == '^') {
+			print(b, leds, i - 1, j);
+		} else {
+			print(b, leds, i, j - 1);
+		}
+	}
+
+	/*
+	 * Getters & Setters
+	 */
+	public String[] getLcss() {
+		return lcss;
+	}
+
+	public void setLcss(String[] lcss) {
+		this.lcss = lcss;
+	}
+
+	public int getPower() {
+		return power;
+	}
+
+	public void setPower(int power) {
+		this.power = power;
+	}
+
+	public int[] getPowers() {
+		return powers;
+	}
+
+	public void setPowers(int[] powers) {
+		this.powers = powers;
+	}
+
+	public int[] getLeds() {
+		return leds;
+	}
+
+	public void setLeds(int[] leds) {
+		this.leds = leds;
+	}
+
+	public char[][] getB() {
+		return b;
+	}
+
+	public void setB(char[][] b) {
+		this.b = b;
+	}
+
+	public int[][] getC() {
+		return c;
+	}
+
+	public void setC(int[][] c) {
+		this.c = c;
+	}
+
+	public String getLcs() {
+		return lcs;
+	}
+
+	public void setLcs(String lcs) {
+		this.lcs = lcs;
+	}
+}
+===== C:\Users\ahmad\eclipse-workspace\algorithmFirstProj\src\algorithmFirstProj\Main.java ===== 
+package algorithmFirstProj;
+
+import cont.MainControl;
+import javafx.application.Application;
+import javafx.stage.Stage;
+
+public class Main extends Application {
+
+	public static void main(String[] args) {
+		Application.launch(args);
+	}
+
+	@Override
+	public void start(Stage stage) {
+		MainControl mainCtrl = new MainControl(stage);
+		mainCtrl.showBrowseScene();
+	}
+}
+===== C:\Users\ahmad\eclipse-workspace\algorithmFirstProj\src\cont\MainControl.java ===== 
+package cont;
+
+import javafx.stage.Stage;
+
+/*
+ * This class creates the main controller that runs the app
+ * and shows the first scene.
+ */
+public class MainControl {
+
+	private Stage stage;
+	private OpeningControl openingControl;
+
+	public MainControl(Stage stage) {
+		this.stage = stage;
+	}
+
+	public void showBrowseScene() {
+		setOpeningControl(new OpeningControl(stage));
+	}
+
+	/*
+	 * Getters and Setters
+	 */
+	public void setOpeningControl(OpeningControl openingControl) {
+		this.openingControl = openingControl;
+	}
+
+	public OpeningControl getOpeningControl() {
+		return openingControl;
+	}
+}
+===== C:\Users\ahmad\eclipse-workspace\algorithmFirstProj\src\cont\OpeningControl.java ===== 
+package cont;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.InputMismatchException;
+
+import algorithmFirstProj.LCS;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+import pres.OpeningScene;
+
+public class OpeningControl {
+private FileChooser fileChooser;
+private File file;
+private OpeningScene openingScene;
+private GridPane pane;
+private Label process;
+private Button run;
+private Button cancel;
+private Label hello;
+private LCS sol;
+
+
+public OpeningControl(Stage stage) {
+    openingScene = new OpeningScene(stage);
+    process = openingScene.getProcess();
+    pane = openingScene.getPane();
+    run = openingScene.getRun();
+    cancel = openingScene.getCancel();
+    hello = openingScene.getHello();
+    fileChooser = new FileChooser();
+
+    handleBrowse(stage);
+    handleCancel(cancel, stage);
+}
+
+private void handleRun(Button run, Stage stage, LCS sol) {
+    run.setOnAction(e -> {
+        if (sol != null) {
+            ProcessControl scene = new ProcessControl(stage, sol);
+            scene.getPowerl().setText("Power Sources: " + sol.getPower());
+        } else {
+            new WarningControl("No data loaded yet!", "Missing Input").show();
+        }
+    });
+}
+
+private void handleBrowse(Stage stage) {
+    openingScene.getBrowse().setOnAction(d -> {
+        file = fileChooser.showOpenDialog(stage);
+        if (file == null) {
+            new WarningControl("You haven't chosen a file yet!", "No file").show();
+            return;
+        }
+
+        if (readFile(file) == -1) {
+            new WarningControl("Number of LEDs and power sources don't match!", "Number mismatch").show();
+        } else {
+            // Safely add 'run' button only if it's not already in the pane
+            if (!pane.getChildren().contains(run)) {
+                pane.add(run, 1, 6);
+            }
+            handleRun(run, stage, sol);
+            hello.setText("Ready to run");
+        }
+    });
+}
+
+private void handleCancel(Button cancel, Stage stage) {
+    cancel.setOnAction(e -> stage.close());
+}
+
+public int readFile(File input) {
+    int x = 0;
+    try (BufferedReader buffer = new BufferedReader(new FileReader(input))) {
+        int power = Integer.parseInt(buffer.readLine());
+        sol = new LCS(new int[power], new int[power]);
+
+        String[] s = buffer.readLine().split(" ");
+        if (s.length != power) {
+            x = -1;
+        } else {
+            for (int i = 0; i < power; i++) {
+                sol.getPowers()[i] = i + 1;
+                sol.getLeds()[i] = Integer.parseInt(s[i]);
+            }
+        }
+    } catch (NumberFormatException t) {
+        new WarningControl(t.getMessage(), "Number Format Exception").show();
+    } catch (IOException e1) {
+        new WarningControl(e1.getMessage(), "IO Exception").show();
+    } catch (InputMismatchException e) {
+        new WarningControl(e.getMessage(), "Input Mismatch Exception").show();
+    }
+    return x;
+}
+
+// ===== Getters & Setters =====
+public Button getCancel() { return cancel; }
+public void setCancel(Button cancel) { this.cancel = cancel; }
+public Button getRun() { return run; }
+public void setRun(Button run) { this.run = run; }
+public FileChooser getFileChooser() { return fileChooser; }
+public void setFileChooser(FileChooser fileChooser) { this.fileChooser = fileChooser; }
+public File getFile() { return file; }
+public void setFile(File file) { this.file = file; }
+public OpeningScene getOpeningScene() { return openingScene; }
+public void setOpeningScene(OpeningScene openingScene) { this.openingScene = openingScene; }
+public GridPane getPane() { return pane; }
+public void setPane(GridPane pane) { this.pane = pane; }
+public Label getProcess() { return process; }
+public void setProcess(Label process) { this.process = process; }
+public Label getHello() { return hello; }
+public void setHello(Label hello) { this.hello = hello; }
+public LCS getSol() { return sol; }
+public void setSol(LCS sol) { this.sol = sol; }
+
+
+}
+===== C:\Users\ahmad\eclipse-workspace\algorithmFirstProj\src\cont\PLT20Control.java ===== 
+package cont;
+
+import algorithmFirstProj.LCS;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
+import javafx.stage.Stage;
+import pres.PB10to20Scene;
+
+/*
+ * This class creates the controller for when the power sources are
+ * more than 10 batteries but less than 20.
+ * It allows the user to show the DP table and the solution,
+ * but not the LEDs simulation.
+ */
+public class PLT20Control {
+	// fields
+	private PB10to20Scene powerMT10LT20Scene;
+	private Label powerl;
+	private GridPane pane;
+	private Label maxl;
+	private Label lcss;
+	private Button btCancel;
+	private Button show;
+
+	public PLT20Control(Stage stage, LCS sol) {
+
+		setPowerMT10LT20Scene(new PB10to20Scene(stage));
+		setBtCancel(powerMT10LT20Scene.getBtCancel());
+		setLcss(powerMT10LT20Scene.getLcss());
+		setMaxl(powerMT10LT20Scene.getMaxl());
+		setPane(powerMT10LT20Scene.getPane());
+		setPowerl(powerMT10LT20Scene.getPowerl());
+		setShow(powerMT10LT20Scene.getShow());
+
+		handleCancel(btCancel, stage);
+		handleShow(getShow(), sol);
+
+		getMaxl().setText("Maximum LEDs powered: " + sol.getC()[sol.getLeds().length - 1][sol.getPowers().length - 1]);
+		getPowerl().setText("You have " + sol.getPower() + " Power Sources");
+
+		StringBuilder text = new StringBuilder();
+		for (int i = 0; i < sol.getLcss().length; i++) {
+			text.append(sol.getLcss()[i]);
+			if (i < sol.getLcss().length - 1) {
+				text.append(", ");
+			}
+		}
+		getLcss().setText(text.toString());
+	}
+
+	private void handleShow(Button table, LCS sol) {
+		table.setOnAction(e -> {
+			new TableControl(sol.getLeds(), sol.getPowers());
+		});
+	}
+
+	private void handleCancel(Button cancButton, Stage stage) {
+		cancButton.setOnAction(e -> stage.close());
+	}
+
+	/*
+	 * Getters and Setters
+	 */
+	public Label getPowerl() {
+		return powerl;
+	}
+
+	public void setPowerl(Label powerl) {
+		this.powerl = powerl;
+	}
+
+	public Label getMaxl() {
+		return maxl;
+	}
+
+	public void setMaxl(Label maxl) {
+		this.maxl = maxl;
+	}
+
+	public Label getLcss() {
+		return lcss;
+	}
+
+	public void setLcss(Label lcss) {
+		this.lcss = lcss;
+	}
+
+	public Button getBtCancel() {
+		return btCancel;
+	}
+
+	public void setBtCancel(Button btCancel) {
+		this.btCancel = btCancel;
+	}
+
+	public Button getShow() {
+		return show;
+	}
+
+	public void setShow(Button show) {
+		this.show = show;
+	}
+
+	public PB10to20Scene getPowerMT10LT20Scene() {
+		return powerMT10LT20Scene;
+	}
+
+	public void setPowerMT10LT20Scene(PB10to20Scene powerMT10LT20Scene) {
+		this.powerMT10LT20Scene = powerMT10LT20Scene;
+	}
+
+	public GridPane getPane() {
+		return pane;
+	}
+
+	public void setPane(GridPane pane) {
+		this.pane = pane;
+	}
+}
+===== C:\Users\ahmad\eclipse-workspace\algorithmFirstProj\src\cont\PM20Control.java ===== 
+package cont;
+
+import algorithmFirstProj.LCS;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
+import javafx.stage.Stage;
+import pres.PM20Scene;
+
+/*
+ * This class creates the controller for when the power sources
+ * are more than 20 batteries.
+ * It only shows the maximum number of LEDs that can be powered.
+ */
+public class PM20Control {
+
+	// fields
+	private PM20Scene powerMT20Scene;
+	private Label maxl;
+	private GridPane pane;
+	private Button btCancel;
+	private Label lcss;
+
+	public PM20Control(Stage stage, LCS sol) {
+
+		setPowerMT20Scene(new PM20Scene(stage));
+		setMaxl(powerMT20Scene.getMaxl());
+		setPane(powerMT20Scene.getPane());
+		setBtCancel(powerMT20Scene.getCancel());
+		setLcss(powerMT20Scene.getLcss());
+
+		// Display the maximum number of powered LEDs
+		getMaxl().setText("Maximum LEDs powered: " + sol.getC()[sol.getLeds().length - 1][sol.getPowers().length - 1]);
+
+		// Build the list of LEDs
+		StringBuilder text = new StringBuilder();
+		for (int i = 0; i < sol.getLcss().length; i++) {
+			text.append(sol.getLcss()[i]);
+			if (i < sol.getLcss().length - 1) {
+				text.append(", ");
+			}
+		}
+		getLcss().setText(text.toString());
+
+		// Handle cancel button
+		handleCancel(btCancel, stage);
+	}
+
+	private void handleCancel(Button cancButton, Stage stage) {
+		cancButton.setOnAction(e -> stage.close());
+	}
+
+	/*
+	 * Getters and Setters
+	 */
+	public PM20Scene getPowerMT20Scene() {
+		return powerMT20Scene;
+	}
+
+	public void setPowerMT20Scene(PM20Scene powerMT20Scene) {
+		this.powerMT20Scene = powerMT20Scene;
+	}
+
+	public Label getMaxl() {
+		return maxl;
+	}
+
+	public void setMaxl(Label maxl) {
+		this.maxl = maxl;
+	}
+
+	public GridPane getPane() {
+		return pane;
+	}
+
+	public void setPane(GridPane pane) {
+		this.pane = pane;
+	}
+
+	public Button getBtCancel() {
+		return btCancel;
+	}
+
+	public void setBtCancel(Button btCancel) {
+		this.btCancel = btCancel;
+	}
+
+	public Label getLcss() {
+		return lcss;
+	}
+
+	public void setLcss(Label lcss) {
+		this.lcss = lcss;
+	}
+}
+===== C:\Users\ahmad\eclipse-workspace\algorithmFirstProj\src\cont\PowerLT10Control.java ===== 
+package cont;
+
+import algorithmFirstProj.LCS;
+import pres.PLT102Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.stage.Stage;
+
+public class PowerLT10Control {
+
+    private Label maxl;
+    private Button show;
+    private Button connect;
+    private Button disconnect;
+    private Button cancel;
+    private PLT102Scene scene;
+
+    public PowerLT10Control(Stage stage, LCS sol) {
+        // Initialize scene and UI components
+        scene = new PLT102Scene(stage, sol.getLeds(), sol.getPowers());
+        maxl = scene.getMaxl();
+        show = scene.getShow();
+        connect = scene.getConnect();
+        disconnect = scene.getDisconnect();
+        cancel = scene.getCancel();
+
+        // Attach handlers
+        handleCancel(cancel, stage);
+        handleConnect(connect, sol);
+        handleDisconnect(disconnect, sol);
+        handleShow(show, sol.getLeds(), sol.getPowers());
+    }
+
+    private void handleShow(Button showBtn, int[] leds, int[] powers) {
+        showBtn.setOnAction(e -> new TableControl(leds, powers));
+    }
+
+    private void handleDisconnect(Button disconnectBtn, LCS sol) {
+        disconnectBtn.setOnAction(e -> {
+            Image off = new Image(getClass().getResource("/images/off.png").toExternalForm());
+            Image offLamb = new Image(getClass().getResource("/images/offlamb.jpg").toExternalForm());
+
+            for (Button bat : scene.getBatts()) {
+                ((ImageView) bat.getGraphic()).setImage(off);
+            }
+
+            for (Button led : scene.getLedds()) {
+                ((ImageView) led.getGraphic()).setImage(offLamb);
+            }
+        });
+    }
+
+    private void handleConnect(Button connectBtn, LCS sol) {
+        System.out.println(getClass().getResource("/images/onlamb.jpg"));
+        System.out.println(getClass().getResource("/images/on.png"));
+
+        connectBtn.setOnAction(e -> {
+            Image on = new Image(getClass().getResource("/images/on.png").toExternalForm());
+            Image onLamb = new Image(getClass().getResource("/images/onlamb.jpg").toExternalForm());
+
+            int[] powers = sol.getPowers();
+            int[] leds = sol.getLeds();
+            String[] lcss = sol.getLcss();
+
+            for (String valStr : lcss) {
+                int val = Integer.parseInt(valStr);
+
+                // Match battery index
+                for (int i = 0; i < powers.length; i++) {
+                    if (powers[i] == val) {
+                        ((ImageView) scene.getBatts().get(i).getGraphic()).setImage(on);
+                    }
+                }
+
+                // Match LED index
+                for (int i = 0; i < leds.length; i++) {
+                    if (leds[i] == val) {
+                        ((ImageView) scene.getLedds().get(i).getGraphic()).setImage(onLamb);
+                    }
+                }
+            }
+        });
+    }
+
+    private void handleCancel(Button cancelBtn, Stage stage) {
+        cancelBtn.setOnAction(e -> stage.close());
+    }
+
+    // Getters
+    public Label getMaxl() { return maxl; }
+    public Button getShow() { return show; }
+    public Button getConnect() { return connect; }
+    public Button getDisconnect() { return disconnect; }
+    public Button getCancel() { return cancel; }
+    public PLT102Scene getScene() { return scene; }
+}
+===== C:\Users\ahmad\eclipse-workspace\algorithmFirstProj\src\cont\ProcessControl.java ===== 
+package cont;
+
+import algorithmFirstProj.LCS;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
+import javafx.stage.Stage;
+import pres.ProcessScene;
+
+/*
+ * This class creates the controller for the scene that shows how many LEDs
+ * the user has and lets them show the boards of LEDs and batteries.
+ */
+public class ProcessControl {
+	// Fields
+	private ProcessScene procScene;
+	private GridPane pane;
+	private Button showBoards;
+	private Label powerl;
+	private Button btCancel;
+
+	public ProcessControl(Stage stage, LCS sol) {
+		this.procScene = new ProcessScene(stage);
+		this.pane = procScene.getPane();
+		this.powerl = procScene.getPowerl();
+		this.btCancel = procScene.getCancel();
+		this.showBoards = procScene.getShowBoards();
+
+		handle_cancel(btCancel, stage);
+		handle_boards(showBoards, stage, sol);
+
+		// Optional: Show quick summary
+		powerl.setText("Power Sources: " + sol.getPower());
+	}
+
+	private void handle_boards(Button show, Stage stage, LCS sol) {
+		show.setOnAction(e -> {
+			int powerCount = sol.getPower();
+
+			if (powerCount <= 10) {
+				new PowerLT10Control(stage, sol);
+			} else if (powerCount <= 20) {
+				new PLT20Control(stage, sol);
+			} else {
+				new PM20Control(stage, sol);
+			}
+		});
+	}
+
+	private void handle_cancel(Button cancel, Stage stage) {
+		cancel.setOnAction(e -> stage.close());
+	}
+
+	/*
+	 * Getters and Setters
+	 */
+	public GridPane getPane() {
+		return pane;
+	}
+
+	public Button getShowBoards() {
+		return showBoards;
+	}
+
+	public void setShowBoards(Button showBoards) {
+		this.showBoards = showBoards;
+	}
+
+	public Label getPowerl() {
+		return powerl;
+	}
+
+	public void setPowerl(Label powerl) {
+		this.powerl = powerl;
+	}
+
+	public Button getBtCancel() {
+		return btCancel;
+	}
+
+	public void setBtCancel(Button btCancel) {
+		this.btCancel = btCancel;
+	}
+}
+===== C:\Users\ahmad\eclipse-workspace\algorithmFirstProj\src\cont\TableControl.java ===== 
+// ===== TableControl.java =====
+package cont;
+
+import javafx.scene.control.Button;
+import pres.TableScene;
+
+/*
+ * This class creates the controller of the Dynamic Programming table scene
+ * to be shown to the user.
+ */
+public class TableControl {
+	// Fields
+	private Button cancel;
+	private TableScene scene;
+
+	public TableControl(int[] leds, int[] powers) {
+		setScene(new TableScene(leds, powers));
+		setCancel(getScene().getBtCancel());
+		handle_cancel(getCancel());
+	}
+
+	private void handle_cancel(Button cancelButton) {
+		cancelButton.setOnAction(e -> {
+			// Defensive check: make sure stage isn't null
+			if (getScene() != null && getScene().getStage() != null) {
+				getScene().getStage().close();
+			}
+		});
+	}
+
+	/*
+	 * Getters and Setters
+	 */
+	public Button getCancel() {
+		return cancel;
+	}
+
+	public void setCancel(Button cancel) {
+		this.cancel = cancel;
+	}
+
+	public TableScene getScene() {
+		return scene;
+	}
+
+	public void setScene(TableScene scene) {
+		this.scene = scene;
+	}
+}
+===== C:\Users\ahmad\eclipse-workspace\algorithmFirstProj\src\cont\WarningControl.java ===== 
+package cont;
+
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import pres.WarningScene;
+
+/*
+ * This class is a controller for an alert shown to the user for a specific warning.
+ */
+public class WarningControl {
+	// Fields
+	private WarningScene scene;
+	private Label message;
+	private Button cancel;
+
+	public WarningControl(String warning, String title) {
+		this.scene = new WarningScene();
+		this.message = scene.getMessage();
+		this.cancel = scene.getCancel();
+
+		scene.getStage().setTitle(title);
+		message.setText(warning);
+
+		handle_cancel(cancel);
+	}
+
+	private void handle_cancel(Button cancelButton) {
+		// Handles cancel button click
+		cancelButton.setOnAction(e -> {
+			if (scene != null && scene.getStage() != null) {
+				scene.getStage().close();
+			}
+		});
+	}
+
+	/*
+	 * Show the warning window
+	 */
+	public void show() {
+		if (scene != null && scene.getStage() != null) {
+			scene.getStage().show();
+		}
+	}
+
+	/*
+	 * Getters and Setters
+	 */
+	public WarningScene getScene() {
+		return scene;
+	}
+
+	public void setScene(WarningScene scene) {
+		this.scene = scene;
+	}
+
+	public Label getMessage() {
+		return message;
+	}
+
+	public void setMessage(Label message) {
+		this.message = message;
+	}
+
+	public Button getCancel() {
+		return cancel;
+	}
+
+	public void setCancel(Button cancel) {
+		this.cancel = cancel;
+	}
+}
+===== C:\Users\ahmad\eclipse-workspace\algorithmFirstProj\src\pres\OpeningScene.java ===== 
+package pres;
+
+import javafx.application.Platform;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
+import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.stage.Stage;
+
+/*
+ * This class creates the scene for browsing input files.
+ * It allows the user to browse the input file and shows alerts if needed.
+ */
+public class OpeningScene {
+
+	// Fields
+	private GridPane pane;
+	private Image img;
+	private Label hello;
+	private Label process;
+	private Button run;
+	private Button browse;
+	private Button cancel;
+
+	public OpeningScene(Stage stage) {
+		pane = new GridPane();
+		pane.setAlignment(Pos.CENTER);
+		pane.setHgap(10);
+		pane.setVgap(10);
+
+		// Try loading background safely
+		try {
+			// Load from resources (adjust path if needed)
+			img = new Image(getClass().getResource("/images/background.jpg").toExternalForm());
+			BackgroundImage bImg = new BackgroundImage(img, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT,
+					BackgroundPosition.CENTER, new BackgroundSize(600, 600, false, false, false, false));
+			pane.setBackground(new Background(bImg));
+		} catch (Exception e) {
+			System.out.println("Warning: Background image not found.");
+		}
+
+		// Greeting label
+		hello = new Label("Hello user, select your LEDs and Power file...");
+		hello.setFont(Font.font(16));
+		hello.setTextFill(Color.BLACK);
+		pane.add(hello, 0, 5, 3, 1);
+
+		// Process label
+		process = new Label("Process");
+		process.setFont(Font.font(12));
+		process.setTextFill(Color.RED);
+		pane.add(process, 0, 6, 3, 1);
+
+		// Run button
+		run = new Button("Run");
+		run.setFont(Font.font(14));
+		run.setPrefSize(100, 30);
+		run.setStyle("-fx-background-radius: 18, 7; -fx-background-color: white; -fx-text-fill: black;");
+		pane.add(run, 0, 7);
+
+		// Browse button
+		browse = new Button("Browse");
+		browse.setFont(Font.font(14));
+		browse.setPrefSize(100, 30);
+		browse.setStyle("-fx-background-radius: 18, 7; -fx-background-color: white; -fx-text-fill: black;");
+		pane.add(browse, 1, 7);
+
+		// Cancel button
+		cancel = new Button("Cancel");
+		cancel.setFont(Font.font(14));
+		cancel.setPrefSize(100, 30);
+		cancel.setStyle("-fx-background-radius: 18, 7; -fx-background-color: white; -fx-text-fill: black;");
+		cancel.setOnAction(e -> Platform.exit());
+		pane.add(cancel, 2, 7);
+
+		// Scene setup
+		Scene scene = new Scene(pane, 600, 600);
+		stage.setScene(scene);
+		stage.setTitle("Max LED Lighting");
+		stage.show();
+	}
+
+	/*
+	 * Getters and Setters
+	 */
+	public GridPane getPane() {
+		return pane;
+	}
+
+	public void setPane(GridPane pane) {
+		this.pane = pane;
+	}
+
+	public Image getImg() {
+		return img;
+	}
+
+	public void setImg(Image img) {
+		this.img = img;
+	}
+
+	public Label getHello() {
+		return hello;
+	}
+
+	public void setHello(Label hello) {
+		this.hello = hello;
+	}
+
+	public Label getProcess() {
+		return process;
+	}
+
+	public void setProcess(Label process) {
+		this.process = process;
+	}
+
+	public Button getRun() {
+		return run;
+	}
+
+	public void setRun(Button run) {
+		this.run = run;
+	}
+
+	public Button getBrowse() {
+		return browse;
+	}
+
+	public void setBrowse(Button browse) {
+		this.browse = browse;
+	}
+
+	public Button getCancel() {
+		return cancel;
+	}
+
+	public void setCancel(Button cancel) {
+		this.cancel = cancel;
+	}
+}
+===== C:\Users\ahmad\eclipse-workspace\algorithmFirstProj\src\pres\PB10to20Scene.java ===== 
+package pres;
+
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.stage.Stage;
+
+/*
+ * This class shows a scene when the power sources are more than 10 and less than or equal to 20.
+ * It shows the optimal solution and allows the user to view the dynamic programming table.
+ */
+public class PB10to20Scene {
+	// Fields
+	private Label powerLabel;
+	private GridPane pane;
+	private Label maxLabel;
+	private Label lcss;
+	private Button cancelBT;
+	private Button showBT;
+
+	public PB10to20Scene(Stage stage) {
+
+		// Layout
+		pane = new GridPane();
+		pane.setAlignment(Pos.CENTER);
+		pane.setHgap(20);
+		pane.setVgap(20);
+
+		// Label showing number of power sources
+		powerLabel = new Label("Power sources: ");
+		powerLabel.setFont(Font.font(16));
+		pane.add(powerLabel, 0, 0, 2, 1);
+
+		// Label showing maximum number of powered LEDs
+		maxLabel = new Label("Maximum LEDs powered: ");
+		maxLabel.setFont(Font.font(16));
+		pane.add(maxLabel, 0, 1, 2, 1);
+
+		// Label for LCS sequence
+		lcss = new Label();
+		lcss.setFont(Font.font(14));
+		lcss.setTextFill(Color.DARKGREEN);
+		pane.add(lcss, 0, 2, 2, 1);
+
+		// Button to show DP table
+		showBT = new Button("Show Table");
+		showBT.setPrefSize(150, 35);
+		showBT.setFont(Font.font(14));
+		showBT.setStyle("-fx-background-radius: 10; -fx-background-color: white;");
+		pane.add(showBT, 0, 3);
+
+		// Cancel button
+		cancelBT = new Button("Cancel");
+		cancelBT.setPrefSize(120, 35);
+		cancelBT.setFont(Font.font(14));
+		cancelBT.setStyle("-fx-background-radius: 10; -fx-background-color: white;");
+		pane.add(cancelBT, 1, 3);
+
+		// Scene setup
+		Scene scene = new Scene(pane, 500, 400);
+		stage.setTitle("Power Source Summary");
+		stage.setScene(scene);
+		stage.show();
+	}
+
+	/*
+	 * Getters and Setters
+	 */
+	public Label getPowerl() {
+		return powerLabel;
+	}
+
+	public void setPowerl(Label powerl) {
+		this.powerLabel = powerl;
+	}
+
+	public GridPane getPane() {
+		return pane;
+	}
+
+	public void setPane(GridPane pane) {
+		this.pane = pane;
+	}
+
+	public Label getMaxl() {
+		return maxLabel;
+	}
+
+	public void setMaxl(Label maxl) {
+		this.maxLabel = maxl;
+	}
+
+	public Label getLcss() {
+		return lcss;
+	}
+
+	public void setLcss(Label lcss) {
+		this.lcss = lcss;
+	}
+
+	public Button getBtCancel() {
+		return cancelBT;
+	}
+
+	public void setBtCancel(Button btCancel) {
+		this.cancelBT = btCancel;
+	}
+
+	public Button getShow() {
+		return showBT;
+	}
+
+	public void setShow(Button show) {
+		this.showBT = show;
+	}
+}
+===== C:\Users\ahmad\eclipse-workspace\algorithmFirstProj\src\pres\PLT102Scene.java ===== 
+package pres;
+
+import java.io.File;
+import java.util.ArrayList;
+import algorithmFirstProj.LCS;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.GridPane;
+import javafx.scene.text.Font;
+import javafx.stage.Stage;
+
+public class PLT102Scene {
+
+    private Stage stage;
+    private GridPane pane;
+    private Label maxLabel;
+    private Button showBT;
+    private Button connectBT;
+    private Button disconnectBT;
+    private Button cancelBT;
+    private ArrayList<Button> batts = new ArrayList<>();
+    private ArrayList<Button> ledds = new ArrayList<>();
+
+    public PLT102Scene(Stage stage, int[] leds, int[] powers) {
+        this.stage = stage;
+
+        // ✅ Use File + toURI for consistent local path handling
+        Image off = new Image(new File("bin/images/off.png").toURI().toString());
+        Image offLamb = new Image(new File("bin/images/offlamb.jpg").toURI().toString());
+
+        pane = new GridPane();
+        pane.setAlignment(Pos.CENTER);
+        pane.setHgap(15.5);
+        pane.setVgap(15.5);
+
+        // LCS result label
+        LCS sol = new LCS(powers, leds);
+        maxLabel = new Label("Maximum LEDs powered: " + sol.getC()[powers.length - 1][leds.length - 1]);
+        maxLabel.setFont(Font.font(16));
+        pane.add(maxLabel, 1, 0);
+
+        // Control buttons
+        showBT = new Button("Table");
+        connectBT = new Button("Connect");
+        disconnectBT = new Button("Disconnect");
+        cancelBT = new Button("Cancel");
+
+        setupButton(showBT, 100, 30);
+        setupButton(connectBT, 100, 30);
+        setupButton(disconnectBT, 100, 30);
+        setupButton(cancelBT, 100, 30);
+
+        pane.add(disconnectBT, 0, 1);
+        pane.add(connectBT, 1, 1);
+        pane.add(showBT, 2, 1);
+        pane.add(cancelBT, 3, 1);
+
+        // Battery buttons
+        for (int i = 0; i < powers.length; i++) {
+            ImageView batteryStatus = new ImageView(off);
+            batteryStatus.setFitWidth(80);
+            batteryStatus.setFitHeight(80);
+
+            Button bat = new Button();
+            bat.setPrefSize(80, 80);
+            bat.setGraphic(batteryStatus);
+            bat.setStyle("-fx-border-color: transparent; -fx-background-color: transparent;");
+            bat.setId(String.valueOf(i));
+            batts.add(bat);
+            pane.add(bat, 2, 2 + i);
+        }
+
+        // LED buttons
+        for (int i = 0; i < leds.length; i++) {
+            ImageView ledd = new ImageView(offLamb);
+            ledd.setFitWidth(80);
+            ledd.setFitHeight(80);
+
+            Button led = new Button();
+            led.setPrefSize(80, 80);
+            led.setGraphic(ledd);
+            led.setStyle("-fx-border-color: transparent; -fx-background-color: transparent;");
+            led.setId(String.valueOf(i));
+            ledds.add(led);
+            pane.add(led, 0, 2 + i);
+        }
+
+        cancelBT.setOnAction(e -> stage.close());
+
+        Scene scene = new Scene(pane);
+        stage.setTitle("Maximum Number of Powered LEDs");
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    private void setupButton(Button btn, int width, int height) {
+        btn.setFont(Font.font(16));
+        btn.setPrefSize(width, height);
+        btn.setStyle("-fx-background-radius: 18, 7; -fx-background-color: white; -fx-text-fill: black;");
+    }
+
+    // Getters
+    public Stage getStage() { return stage; }
+    public GridPane getPane() { return pane; }
+    public Label getMaxl() { return maxLabel; }
+    public Button getShow() { return showBT; }
+    public Button getConnect() { return connectBT; }
+    public Button getDisconnect() { return disconnectBT; }
+    public Button getCancel() { return cancelBT; }
+    public ArrayList<Button> getBatts() { return batts; }
+    public ArrayList<Button> getLedds() { return ledds; }
+}
+===== C:\Users\ahmad\eclipse-workspace\algorithmFirstProj\src\pres\PM20Scene.java ===== 
+// ===== PM20Scene.java =====
+package pres;
+
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.stage.Stage;
+
+/*
+ * This class shows a scene when the power sources are more than 20.
+ * It shows only the optimal solution for the maximum LEDs powered.
+ */
+public class PM20Scene {
+	// Fields
+	private Stage stage;
+	private GridPane pane;
+	private Label maxLabel;
+	private Label lcss;
+	private Button cancelBT;
+
+	public PM20Scene(Stage stage) {
+		this.stage = stage;
+
+		// Pane setup
+		pane = new GridPane();
+		pane.setAlignment(Pos.CENTER);
+		pane.setHgap(15);
+		pane.setVgap(15);
+		pane.setBackground(new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
+
+		// Label for max powered LEDs
+		maxLabel = new Label();
+		maxLabel.setFont(Font.font(16));
+		pane.add(maxLabel, 1, 1);
+
+		// Label for exact powered LEDs
+		lcss = new Label();
+		lcss.setFont(Font.font(14));
+		lcss.setTextFill(Color.GREEN);
+		pane.add(lcss, 1, 2);
+
+		// Cancel button
+		cancelBT = new Button("Cancel");
+		cancelBT.setPrefSize(100, 30);
+		cancelBT.setStyle("-fx-background-radius: 18, 7; -fx-background-color: lightyellow;");
+		cancelBT.setFont(Font.font(16));
+		pane.add(cancelBT, 2, 1);
+
+		// Scene settings
+		Scene scene = new Scene(pane);
+		stage.setTitle("Power Source Supplied");
+		stage.setScene(scene);
+		stage.show();
+	}
+
+	/*
+	 * Getters and Setters
+	 */
+	public Stage getStage() {
+		return stage;
+	}
+
+	public GridPane getPane() {
+		return pane;
+	}
+
+	public Label getMaxl() {
+		return maxLabel;
+	}
+
+	public void setMaxl(Label maxl) {
+		this.maxLabel = maxl;
+	}
+
+	public Label getLcss() {
+		return lcss;
+	}
+
+	public void setLcss(Label lcss) {
+		this.lcss = lcss;
+	}
+
+	public Button getCancel() {
+		return cancelBT;
+	}
+
+	public void setCancel(Button cancel) {
+		this.cancelBT = cancel;
+	}
+}
+===== C:\Users\ahmad\eclipse-workspace\algorithmFirstProj\src\pres\ProcessScene.java ===== 
+package pres;
+
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
+import javafx.scene.layout.GridPane;
+import javafx.scene.text.Font;
+import javafx.stage.Stage;
+
+/*
+ * This class shows the interface to the user for displaying number of LEDs and power sources.
+ * It allows the user to show the boards of LEDs and batteries.
+ */
+public class ProcessScene {
+	// Fields
+	private Stage stage;
+	private GridPane pane;
+	private Image img;
+	private Button showBoards;
+	private Button cancel;
+	private Label powerl;
+
+	public ProcessScene(Stage stage) {
+		this.stage = stage;
+
+		// Background image
+		img = new Image(getClass().getResource("/images/background.jpg").toExternalForm());
+		BackgroundImage bImg = new BackgroundImage(img, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT,
+				BackgroundPosition.CENTER, BackgroundSize.DEFAULT);
+		Background bGround = new Background(bImg);
+
+		// Pane setup
+		pane = new GridPane();
+		pane.setAlignment(Pos.CENTER);
+		pane.setHgap(15);
+		pane.setVgap(15);
+		pane.setBackground(bGround);
+
+		// Label for number of power sources
+		powerl = new Label();
+		powerl.setFont(Font.font(16));
+		pane.add(powerl, 1, 3);
+
+		// Button to show boards
+		showBoards = new Button("Show Boards");
+		showBoards.setPrefSize(150, 30);
+		showBoards.setFont(Font.font(16));
+		showBoards.setStyle("-fx-background-radius: 18, 7; -fx-background-color:white;");
+		pane.add(showBoards, 1, 4);
+
+		// Cancel button
+		cancel = new Button("Cancel");
+		cancel.setPrefSize(100, 30);
+		cancel.setFont(Font.font(16));
+		cancel.setStyle("-fx-background-radius: 18, 7; -fx-background-color:white;");
+		pane.add(cancel, 2, 4);
+
+		// Scene setup
+		Scene scene = new Scene(pane);
+		stage.setTitle("Power Source Supplied");
+		stage.setScene(scene);
+		stage.show();
+	}
+
+	/*
+	 * Getters and Setters
+	 */
+	public Stage getStage() {
+		return stage;
+	}
+
+	public GridPane getPane() {
+		return pane;
+	}
+
+	public Button getShowBoards() {
+		return showBoards;
+	}
+
+	public void setShowBoards(Button showBoards) {
+		this.showBoards = showBoards;
+	}
+
+	public Button getCancel() {
+		return cancel;
+	}
+
+	public void setCancel(Button cancel) {
+		this.cancel = cancel;
+	}
+
+	public Label getPowerl() {
+		return powerl;
+	}
+
+	public void setPowerl(Label powerl) {
+		this.powerl = powerl;
+	}
+}
+===== C:\Users\ahmad\eclipse-workspace\algorithmFirstProj\src\pres\TableScene.java ===== 
+package pres;
+
+import algorithmFirstProj.*;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.stage.Stage;
+
+/*
+ * This class shows a scene of the dynamic programming table for the user.
+ */
+public class TableScene {
+	// Fields
+	private GridPane root;
+	private Button btCancel;
+	private Stage stage;
+
+	public TableScene(int[] leds, int[] powers) {
+		LCS sol = new LCS(leds, powers);
+
+		int length = powers.length;
+		int width = leds.length;
+
+		root = new GridPane();
+		root.setAlignment(Pos.CENTER);
+		root.setHgap(1);
+		root.setVgap(1);
+
+		// Column headers (LEDs)
+		for (int y = 1; y <= length; y++) {
+			Label num = new Label(leds[y - 1] + "");
+			num.setPrefSize(50, 50);
+			num.setAlignment(Pos.CENTER);
+			num.setFont(Font.font(14));
+			num.setStyle("-fx-background-color:lightyellow; -fx-border-color:lightgrey;");
+			GridPane.setRowIndex(num, y);
+			GridPane.setColumnIndex(num, 0);
+			root.getChildren().add(num);
+		}
+
+		// Row headers (Powers)
+		for (int x = 1; x <= width; x++) {
+			Label num = new Label(powers[x - 1] + "");
+			num.setPrefSize(50, 50);
+			num.setAlignment(Pos.CENTER);
+			num.setFont(Font.font(14));
+			num.setStyle("-fx-background-color:lightyellow; -fx-border-color:lightgrey;");
+			GridPane.setRowIndex(num, 0);
+			GridPane.setColumnIndex(num, x);
+			root.getChildren().add(num);
+		}
+
+		// Table cells
+		for (int y = 1; y <= length; y++) {
+			for (int x = 1; x <= width; x++) {
+				Label num = new Label(sol.getC()[y - 1][x - 1] + "" + sol.getB()[y - 1][x - 1]);
+				num.setPrefSize(50, 50);
+				num.setAlignment(Pos.CENTER);
+				num.setFont(Font.font(14));
+				num.setStyle("-fx-background-color:white; -fx-border-color:lightgrey;");
+				GridPane.setRowIndex(num, y);
+				GridPane.setColumnIndex(num, x);
+				root.getChildren().add(num);
+			}
+		}
+
+		// Cancel button
+		btCancel = new Button("Ok");
+		btCancel.setFont(Font.font(14));
+		btCancel.setTextFill(Color.WHITE);
+		btCancel.setStyle("-fx-background-radius: 7, 7; -fx-background-color:grey;");
+		root.add(btCancel, 0, 0);
+		GridPane.setColumnSpan(btCancel, width + 1);
+
+		// Stage setup
+		stage = new Stage();
+		Scene scene = new Scene(root, 800, 800);
+		stage.setTitle("Dynamic Table");
+		stage.setScene(scene);
+		stage.show();
+	}
+
+	/*
+	 * Getters and Setters
+	 */
+	public GridPane getRoot() {
+		return root;
+	}
+
+	public void setRoot(GridPane root) {
+		this.root = root;
+	}
+
+	public Button getBtCancel() {
+		return btCancel;
+	}
+
+	public void setBtCancel(Button btCancel) {
+		this.btCancel = btCancel;
+	}
+
+	public Stage getStage() {
+		return stage;
+	}
+
+	public void setStage(Stage stage) {
+		this.stage = stage;
+	}
+}
+===== C:\Users\ahmad\eclipse-workspace\algorithmFirstProj\src\pres\WarningScene.java ===== 
+package pres;
+
+import javafx.geometry.HPos;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
+import javafx.stage.Stage;
+
+/*
+ * This class creates a scene to show an alert message to the user.
+ */
+public class WarningScene {
+	// Fields
+	private Stage stage;
+	private Label message;
+	private Button cancel;
+	private GridPane pane;
+
+	public WarningScene() {
+		// Initialize stage
+		stage = new Stage();
+
+		// Initialize layout
+		pane = new GridPane();
+		pane.setAlignment(Pos.CENTER);
+		pane.setHgap(15);
+		pane.setVgap(15);
+
+		// Message label
+		message = new Label();
+		message.setTextFill(Color.ORANGERED);
+		pane.add(message, 0, 1);
+
+		// Cancel button
+		cancel = new Button("Okay");
+		cancel.setPrefSize(80, 20);
+		cancel.setStyle("-fx-background-radius: 18, 7; -fx-background-color:white;");
+		GridPane.setHalignment(cancel, HPos.CENTER);
+		pane.add(cancel, 0, 2);
+
+		// Create scene and attach to stage
+		Scene scene = new Scene(pane);
+		stage.setScene(scene);
+	}
+
+	/*
+	 * Getters and Setters
+	 */
+	public Stage getStage() {
+		return stage;
+	}
+
+	public void setStage(Stage stage) {
+		this.stage = stage;
+	}
+
+	public Label getMessage() {
+		return message;
+	}
+
+	public void setMessage(Label message) {
+		this.message = message;
+	}
+
+	public Button getCancel() {
+		return cancel;
+	}
+
+	public void setCancel(Button cancel) {
+		this.cancel = cancel;
+	}
+}

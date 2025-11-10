@@ -37,7 +37,7 @@ Original-Version/
 ## ⚙️ How to Run
 
 1. Open the project in **Eclipse**, **IntelliJ**, or **VS Code** with JavaFX support.
-2. Run `OpeningScene.java`.
+2. Run `Main.java`.
 3. Load an input file (e.g., `../data/input_example.txt`).
 4. Explore the simulation and DP table.
 
